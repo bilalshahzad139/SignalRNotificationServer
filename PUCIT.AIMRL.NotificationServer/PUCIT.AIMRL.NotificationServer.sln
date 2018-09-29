@@ -1,0 +1,78 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.25420.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "DataFramework", "DataFramework", "{8E7F04F6-D3BD-493A-8736-AA5FA78DF8E4}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "MainApp", "MainApp", "{D91DF4CF-592D-4F67-84E2-F51DA32CBC45}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "DBScript", "DBScript", "{4CC13FCF-9BE7-48C5-B05F-BF08324DB3E1}"
+	ProjectSection(SolutionItems) = preProject
+		DBScripts\DB_Script.txt = DBScripts\DB_Script.txt
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PUCIT.AIMRL.NotificationServer.DAL", "PUCIT.AIMRL.NotificationServer.DAL\PUCIT.AIMRL.NotificationServer.DAL.csproj", "{81A94D14-0AEA-4969-8656-2C528F540DAE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PUCIT.AIMRL.NotificationServer.Entities", "PUCIT.AIMRL.NotificationServer.Entities\PUCIT.AIMRL.NotificationServer.Entities.csproj", "{8B85AFB3-83BC-4168-8DC0-D9991DA9DD8D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PUCIT.AIMRL.NotificationServer", "PUCIT.AIMRL.NotificationServer\PUCIT.AIMRL.NotificationServer.csproj", "{C05EAE7A-E611-4004-8909-2B214CDD11CA}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tester", "Tester", "{6276ACD5-B966-45B4-B444-F8AE9784D16A}"
+EndProject
+Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "SimpleTestWebSite", "Testers\SimpleTestWebSite\", "{110374D5-11BC-4E0D-A8C5-538665F125E4}"
+	ProjectSection(WebsiteProperties) = preProject
+		TargetFrameworkMoniker = ".NETFramework,Version%3Dv4.6.1"
+		Debug.AspNetCompiler.VirtualPath = "/localhost_29647"
+		Debug.AspNetCompiler.PhysicalPath = "Testers\SimpleTestWebSite\"
+		Debug.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_29647\"
+		Debug.AspNetCompiler.Updateable = "true"
+		Debug.AspNetCompiler.ForceOverwrite = "true"
+		Debug.AspNetCompiler.FixedNames = "false"
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.VirtualPath = "/localhost_29647"
+		Release.AspNetCompiler.PhysicalPath = "Testers\SimpleTestWebSite\"
+		Release.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_29647\"
+		Release.AspNetCompiler.Updateable = "true"
+		Release.AspNetCompiler.ForceOverwrite = "true"
+		Release.AspNetCompiler.FixedNames = "false"
+		Release.AspNetCompiler.Debug = "False"
+		VWDPort = "29647"
+		SlnRelativePath = "Testers\SimpleTestWebSite\"
+		DefaultWebSiteLanguage = "Visual C#"
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{81A94D14-0AEA-4969-8656-2C528F540DAE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{81A94D14-0AEA-4969-8656-2C528F540DAE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{81A94D14-0AEA-4969-8656-2C528F540DAE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{81A94D14-0AEA-4969-8656-2C528F540DAE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8B85AFB3-83BC-4168-8DC0-D9991DA9DD8D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8B85AFB3-83BC-4168-8DC0-D9991DA9DD8D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8B85AFB3-83BC-4168-8DC0-D9991DA9DD8D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8B85AFB3-83BC-4168-8DC0-D9991DA9DD8D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C05EAE7A-E611-4004-8909-2B214CDD11CA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C05EAE7A-E611-4004-8909-2B214CDD11CA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C05EAE7A-E611-4004-8909-2B214CDD11CA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C05EAE7A-E611-4004-8909-2B214CDD11CA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{110374D5-11BC-4E0D-A8C5-538665F125E4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{110374D5-11BC-4E0D-A8C5-538665F125E4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{110374D5-11BC-4E0D-A8C5-538665F125E4}.Release|Any CPU.ActiveCfg = Debug|Any CPU
+		{110374D5-11BC-4E0D-A8C5-538665F125E4}.Release|Any CPU.Build.0 = Debug|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{4CC13FCF-9BE7-48C5-B05F-BF08324DB3E1} = {8E7F04F6-D3BD-493A-8736-AA5FA78DF8E4}
+		{81A94D14-0AEA-4969-8656-2C528F540DAE} = {8E7F04F6-D3BD-493A-8736-AA5FA78DF8E4}
+		{8B85AFB3-83BC-4168-8DC0-D9991DA9DD8D} = {8E7F04F6-D3BD-493A-8736-AA5FA78DF8E4}
+		{C05EAE7A-E611-4004-8909-2B214CDD11CA} = {D91DF4CF-592D-4F67-84E2-F51DA32CBC45}
+		{110374D5-11BC-4E0D-A8C5-538665F125E4} = {6276ACD5-B966-45B4-B444-F8AE9784D16A}
+	EndGlobalSection
+EndGlobal
