@@ -17,8 +17,10 @@ namespace PUCIT.AIMRL.NotificationServer
             PUCIT.AIMRL.Common.EncryptDecryptUtility.SetParameters("pUcITAIMRLARRRPRojecT", "PUCITAImRLARRRPRojECT", "MD5", 50, "aImrLpucitorerpj", 256);
 
             //var encString = PUCIT.AIMRL.Common.EncryptDecryptUtility.Encrypt(@"Data Source=.\SQLEXPRESS2012;Initial Catalog=AimNotificationServer;Integrated Security=True;");
+            //NotificationServer.DAL.NotificationEngineDataService.GetNotifcations("1", 1, 0);
 
-            NotificationServer.DAL.NotificationEngineDataService.GetNotifcations("1", 1, 0);
+            GlobalDataManager.NotificationApplicationsList =  NotificationServer.DAL.NotificationEngineDataService.GetNotifcationApplications();
+
         }
 
         protected void Session_Start(object sender, EventArgs e)

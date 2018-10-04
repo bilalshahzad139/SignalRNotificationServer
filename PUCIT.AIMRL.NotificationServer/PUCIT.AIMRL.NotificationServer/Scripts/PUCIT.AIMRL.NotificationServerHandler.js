@@ -14,6 +14,7 @@ PUCIT.AIMRL.NotificationServerHandler = (function () {
     var $mainContainer = null;
     var _baseKey = '';
     var _desktopNotificationSupport = true;
+    var _stoppedFromServerSide = false;
 
     function config(args) {
         var _defaults = {};
@@ -45,7 +46,7 @@ PUCIT.AIMRL.NotificationServerHandler = (function () {
     }
 
     function init(args) {
-
+        
         config(args);
 
         //Generate HTML of Main Container if container is empty
@@ -100,13 +101,12 @@ PUCIT.AIMRL.NotificationServerHandler = (function () {
             return false;
         });
 
-
         $mainContainer.find('div.dev_notifications div.ib-notify-item-group').remove();
 
         $mainContainer.find('#MarkAllAsRead').unbind("click").bind("click", function (e) {
             e.stopPropagation();
             makeAllUnRead();
-            _mainNotificationHub.server.markNotification(_NotificationLocalStorageData.maxNotificationId, _options.appID, _options.EID, true, true);
+            _mainNotificationHub.server.markNotification(_NotificationLocalStorageData.maxNotificationId,true, true);
             return false;
         });
 
@@ -140,7 +140,7 @@ PUCIT.AIMRL.NotificationServerHandler = (function () {
         _mainNotificationHub = $.connection.mainNotificationHub;
 
         // Create a function that hub can call back to load message at recevier side
-        _mainNotificationHub.client.addMessage = function (notifciationId, eid, message, msgTime, showDesktopNotif, extraData) { //, msgTime) {
+        _mainNotificationHub.client.addMessage = function (notifciationId,newID, message, msgTime, showDesktopNotif, extraData) { //, msgTime) {
 
             try {
                 extraData = JSON.parse(extraData);
@@ -150,7 +150,7 @@ PUCIT.AIMRL.NotificationServerHandler = (function () {
 
             var msgObj = { notificationId: notifciationId, msg: message, msgTime: msgTime, isRead: false, DN: showDesktopNotif, ED: extraData };
 
-            manageMessageInNotifications(msgObj);
+            manageMessageInNotifications(msgObj, newID);
 
             if (showDesktopNotif) {
                 ShowDesktopNotification(notifciationId, message, msgTime);
@@ -164,12 +164,17 @@ PUCIT.AIMRL.NotificationServerHandler = (function () {
         }
 
         // Create a function that hub can call back after agent successfully logged into the website
-        _mainNotificationHub.client.loginResult = function (success) {
-            if (success == true) {
-                loadNotifcationFromServer();
-            }
-            else
-                alert('Error occurred');
+        _mainNotificationHub.client.stopConnection = function (message) {
+            _stoppedFromServerSide = true;
+            $.connection.hub.stop();
+            if (message)
+                alert(message);
+
+            //if (success == true) {
+            //    loadNotifcationFromServer();
+            //}
+            //else
+            //    alert('Error occurred');
         };
 
         // Methods for error handling
@@ -178,11 +183,12 @@ PUCIT.AIMRL.NotificationServerHandler = (function () {
                 console.log($.connection.hub.lastError.message);
                 showConnectionError('Disconnected ... ');
             }
-
-            setTimeout(function () {
-                showConnectionError('Reconnecting ...');
-                startConnection();
-            }, 4000); // Re-start connection after 4 seconds
+            if (_stoppedFromServerSide == false) {
+                setTimeout(function () {
+                    showConnectionError('Reconnecting ...');
+                    startConnection();
+                }, 4000); // Re-start connection after 4 seconds
+            }
         });
 
         $.connection.hub.connectionSlow(function () {
@@ -206,9 +212,12 @@ PUCIT.AIMRL.NotificationServerHandler = (function () {
 
     function startConnection() {
 
+        $.connection.hub.qs = "employeeid=" + _options.EID + "&appid=" + _options.appID;
+        
         $.connection.hub.start()
             .done(function () {
-                _mainNotificationHub.server.agentConnect(_options.EID, _options.appID);
+                loadNotifcationFromServer();
+                //_mainNotificationHub.server.agentConnect(_options.EID, _options.appID);
             })
             .fail(function () {
                 showConnectionError('Could not connect');
@@ -231,12 +240,12 @@ PUCIT.AIMRL.NotificationServerHandler = (function () {
         SaveDataInLocalStorage();
     }
 
-    function manageMessageInNotifications(msgObj) {
+    function manageMessageInNotifications(msgObj,newID) {
 
         //var msgObj = { notificationId: notifciationId, msg: msg, msgTime: msgTime, isRead: false, DN: showDesktopNotif, ED: extraData };
 
         _NotificationLocalStorageData.unreadCount++;
-        _NotificationLocalStorageData.maxNotificationId = msgObj.notificationId,
+        _NotificationLocalStorageData.maxNotificationId = newID,
         _NotificationLocalStorageData.history.unshift(msgObj)
 
         SaveDataInLocalStorage();
@@ -248,7 +257,7 @@ PUCIT.AIMRL.NotificationServerHandler = (function () {
 
         var employee_id = _options.EID;
 
-        _mainNotificationHub.server.getNotifcations(_options.appID, employee_id, _NotificationLocalStorageData.maxNotificationId).then(function (res) {
+        _mainNotificationHub.server.getNotifcations(_NotificationLocalStorageData.maxNotificationId).then(function (res) {
             /*
             ----What is res---------------
             res = return new
@@ -311,17 +320,17 @@ PUCIT.AIMRL.NotificationServerHandler = (function () {
 
     //This is called when 'Show More' is clicked
     function loadNextNotitifications() {
-        var notId = 0;
+        var notId = "";
         var lastItem = $("div.dev_notifications div.ib-notify-item-group[nid]:last");
 
         if (lastItem.length == 1) {
-            notId = Number(lastItem.attr('nid'));
+            notId = lastItem.attr('nid');
         }
 
         var startIndex = 0;
 
         //if there is already notification in panel
-        if (notId > 0) {
+        if (notId) {
             for (var i = 0; i < _NotificationLocalStorageData.history.length; i++) {
                 var msg = _NotificationLocalStorageData.history[i];
                 if (msg.notificationId == notId) {
@@ -371,7 +380,6 @@ PUCIT.AIMRL.NotificationServerHandler = (function () {
                 $itemOuterDiv.addClass('unread');
                 //$itemOuterDiv.addClass('checked');
             }
-
 
             var $icon = $('<span class="ib-icon-holder"><i class="ib-noti-icons dev_itemicon"></i><span>')
             $icon.find("i").attr('notificationid', itemObj.notificationId);
@@ -436,7 +444,7 @@ PUCIT.AIMRL.NotificationServerHandler = (function () {
                     $("#dev_notif_count").text(_NotificationLocalStorageData.unreadCount);
                     SaveDataInLocalStorage();
 
-                    _mainNotificationHub.server.markNotification(notificationId, _options.appID, _options.EID, true, false);
+                    _mainNotificationHub.server.markNotification(notificationId,  true, false);
                 }
 
                 if (_options.itemClickedCallback) {
@@ -570,7 +578,7 @@ PUCIT.AIMRL.NotificationServerHandler = (function () {
                 extraData = '{}';
             }
             
-            _mainNotificationHub.server.sendNotification(_options.appID, empTo, message, showDesktopNotif, extraData);
+            _mainNotificationHub.server.sendNotification(empTo, message, showDesktopNotif, extraData);
 
         },
         EnableDesktopNotification: function () {

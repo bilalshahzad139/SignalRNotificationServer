@@ -8,11 +8,15 @@ namespace PUCIT.AIMRL.NotificationServer.Entities
 {
     public class RealTimeNotifications
     {
-        public long NotificationID { get; set; }
-        public int senderAppID { get; set; }
-        public string receiverAppID { get; set; }
-        public int SenderID { get; set; }
-        public int ReceiverID { get; set; }
+        public long ID { get; set; } //Number
+        public String NotificationID { get; set; }  //Guid
+
+        public String SenderAppID { get; set; }
+        public long SenderID { get; set; }
+
+        public string ReceiverAppID { get; set; }
+        public long ReceiverID { get; set; }
+
         public string NotificationDetail { get; set; }
         public DateTime CreatedOn { get; set; }
         public bool IsRead { get; set; }
@@ -89,5 +93,24 @@ namespace PUCIT.AIMRL.NotificationServer.Entities
         {
             return _connections;
         }
+    }
+
+    public class CustomConnectionData
+    {
+        public long UserID { get; set; }
+        public String AppID { get; set;}
+
+        public override String ToString()
+        {
+            return string.Format("{0}_{1}", this.UserID, this.AppID);
+        }
+    }
+
+    public class NotificationApplications
+    {
+        public String AppId { get; set; }
+        public String SecretKey { get; set; }
+        public String AppName { get; set; }
+        public String AppBaseUrl { get; set; }
     }
 }

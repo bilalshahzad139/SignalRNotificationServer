@@ -23,27 +23,32 @@ namespace PUCIT.AIMRL.NotificationServer.DAL
             Database.SetInitializer<NotificationEngineDataContext>(null);
         }
 
-        public static Int64 SaveNotification(RealTimeNotifications obj)
+        public static long SaveNotification(RealTimeNotifications obj)
         {
             try
             {
                 using (var ctx = new NotificationEngineDataContext())
                 {
-                    var query = "execute [dbo].[usp_CreateAndUpdateNotifications] @pNotificationID, @ReceiverAppID, @SenderID, @ReceiverID, @NotificationDetail,@IsRead,@datetime,@extraDataAsJson";
+                    var query = "execute [dbo].[usp_CreateAndUpdateNotifications] @pNotificationID, @senderAppID, @SenderID, @ReceiverAppID,  @ReceiverID, @NotificationDetail,@IsRead,@datetime,@extraDataAsJson";
 
                     var args = new DbParameter[] {
-                    new SqlParameter { ParameterName = "@pNotificationID", Value = obj.NotificationID},                    
-                    new SqlParameter { ParameterName = "@ReceiverAppID", Value = obj.receiverAppID},
+                    new SqlParameter { ParameterName = "@pNotificationID", Value = obj.NotificationID}, 
+                                       
+                    
+                    new SqlParameter { ParameterName = "@senderAppID", Value = obj.SenderAppID},
                     new SqlParameter { ParameterName = "@SenderID", Value = obj.SenderID},
-                    new SqlParameter { ParameterName = "@ReceiverID", Value = obj.ReceiverID},
+
+                        new SqlParameter { ParameterName = "@ReceiverAppID", Value = obj.ReceiverAppID},
+                        new SqlParameter { ParameterName = "@ReceiverID", Value = obj.ReceiverID},
+
                     new SqlParameter { ParameterName = "@NotificationDetail", Value = obj.NotificationDetail},
                     new SqlParameter { ParameterName = "@isRead", Value = obj.IsRead},
                     new SqlParameter { ParameterName = "@datetime", Value = obj.CreatedOn},
                     new SqlParameter { ParameterName = "@extraDataAsJson", Value = obj.extraDataAsJson},
                 };
 
-                    var data = ctx.Database.SqlQuery<Int64>(query, args).FirstOrDefault();
-                    return data;
+                    var notificationID = ctx.Database.SqlQuery<long>(query, args).FirstOrDefault();
+                    return notificationID;
                 }
             }
             catch (Exception ex)
@@ -54,7 +59,7 @@ namespace PUCIT.AIMRL.NotificationServer.DAL
 
         }
 
-        public static List<RealTimeNotifications> GetNotifcations(string appID,int empID, int max_notification_id)
+        public static List<RealTimeNotifications> GetNotifcations(string appID,long empID, long max_notification_id)
         {
             try
             {
@@ -86,7 +91,7 @@ namespace PUCIT.AIMRL.NotificationServer.DAL
 
         }
 
-        public static Int64 UpdateNotificationReadStatus(Int64 pNotificationID,string receiverAppID, int empID, Boolean isRead, Boolean markAll, DateTime dateTime)
+        public static String UpdateNotificationReadStatus(String pNotificationID,string receiverAppID, long empID, Boolean isRead, Boolean markAll, DateTime dateTime)
         {
             try
             {
@@ -103,16 +108,40 @@ namespace PUCIT.AIMRL.NotificationServer.DAL
                     new SqlParameter { ParameterName = "@dateTime", Value = dateTime},
                 };
 
-                    var data = ctx.Database.SqlQuery<Int64>(query, args).FirstOrDefault();
+                    var data = ctx.Database.SqlQuery<String>(query, args).FirstOrDefault();
                     return data;
                 }
             }
             catch (Exception ex)
             {
                 LogHandler.WriteLog(MethodBase.GetCurrentMethod().Name, ex.Message, PUCIT.AIMRL.Common.Logger.LogType.ErrorMsg, ex);
-                return 0;
+                return "";
+            }
+        }
+        public static List<NotificationApplications> GetNotifcationApplications()
+        {
+            try
+            {
+                using (var ctx = new NotificationEngineDataContext())
+                {
+                    var query = "execute dbo.usp_GetNotificationApps";
+
+                    var args = new DbParameter[] {
+                    };
+
+                    var data = ctx.Database.SqlQuery<NotificationApplications>(query, args).ToList();
+
+                    return data;
+                }
+            }
+            catch (Exception ex)
+            {
+                LogHandler.WriteLog(MethodBase.GetCurrentMethod().Name, ex.Message, PUCIT.AIMRL.Common.Logger.LogType.ErrorMsg, ex);
+                return new List<NotificationApplications>();
             }
 
         }
+
+
     }
 }

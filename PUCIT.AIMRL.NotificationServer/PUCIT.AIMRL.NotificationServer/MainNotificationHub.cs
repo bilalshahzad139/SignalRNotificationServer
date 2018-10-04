@@ -7,81 +7,149 @@ using Microsoft.AspNet.SignalR;
 using System.Threading.Tasks;
 using PUCIT.AIMRL.NotificationServer.DAL;
 using PUCIT.AIMRL.NotificationServer.Entities;
+using PUCIT.AIMRL.Common;
 
 namespace PUCIT.AIMRL.NotificationServer
 {
     public class MainNotificationHub : Hub
     {
-
-        public void AgentConnect(Int64 employeeid, String appid)
+        public override Task OnConnected()
         {
             try
             {
-                String empConn = string.Format("{0}{1}{2}", employeeid, '_' , appid);
+                var employeeid = Convert.ToInt64(Context.QueryString["employeeid"]);
+                var appid = Context.QueryString["appid"];
+                var requesterAppUrl = Context.Headers["Origin"];
+
+                /*
+                 Perform Employee ID, App ID validation, URL validation 
+                */
+
+                var obj = GlobalDataManager.NotificationApplicationsList.Where(a => a.AppId == appid && a.AppBaseUrl == requesterAppUrl).FirstOrDefault();
+                if(obj == null)
+                {
+                    Clients.Caller.stopConnection("Invalid Request or Unregistered App!");
+                    return null;
+                }
+
+                
+
+                var empConn = new CustomConnectionData() { UserID = employeeid, AppID = appid };
 
                 GlobalDataManager._userIdentity.TryAdd(Context.ConnectionId, empConn);
 
                 // add conection with reference to employee(key : 'employeeID_appID')
-                IEnumerable<string> employeeConnections = GlobalDataManager._connections.GetConnections(empConn);
+                IEnumerable<string> employeeConnections = GlobalDataManager._connections.GetConnections(empConn.ToString());
 
                 if (!employeeConnections.Contains(Context.ConnectionId))
-                    GlobalDataManager._connections.Add(empConn, Context.ConnectionId);
-
-                Clients.Caller.loginResult(true);
+                    GlobalDataManager._connections.Add(empConn.ToString(), Context.ConnectionId);
             }
             catch (Exception ex)
             {
                 PUCIT.AIMRL.Common.Logger.LogHandler.WriteLog("App", ex.ToString(), PUCIT.AIMRL.Common.Logger.LogType.ErrorMsg);
-                Clients.Caller.loginResult(false);
+                Clients.Caller.stopConnection("Invalid Request");
             }
+
+            return base.OnConnected();
+        }
+        public void AgentConnect(Int64 employeeid, String appid)
+        {
+            //try
+            //{
+
+            //    var requesterAppUrl = Context.Headers["Origin"];
+
+            //    /*
+            //     Perform Employee ID, App ID validation, URL validation 
+            //    */
+
+            //    var empConn = new CustomConnectionData() { UserID = employeeid,AppID=appid };
+
+            //    GlobalDataManager._userIdentity.TryAdd(Context.ConnectionId, empConn);
+
+            //    // add conection with reference to employee(key : 'employeeID_appID')
+            //    IEnumerable<string> employeeConnections = GlobalDataManager._connections.GetConnections(empConn.ToString());
+
+            //    if (!employeeConnections.Contains(Context.ConnectionId))
+            //        GlobalDataManager._connections.Add(empConn.ToString(), Context.ConnectionId);
+
+            //    /*
+            //     * Return connection ID to client so this connection ID should come in further requests
+            //     */
+            //    Clients.Caller.loginResult(true);
+            //}
+            //catch (Exception ex)
+            //{
+            //    PUCIT.AIMRL.Common.Logger.LogHandler.WriteLog("App", ex.ToString(), PUCIT.AIMRL.Common.Logger.LogType.ErrorMsg);
+            //    Clients.Caller.loginResult(false);
+            //}
         }
 
         public override Task OnDisconnected(bool stopCalled)
         {
-            String empConn;
+            var empConn = new CustomConnectionData();
             if (GlobalDataManager._userIdentity.TryGetValue(Context.ConnectionId, out empConn))
             {
-                GlobalDataManager._connections.Remove(empConn, Context.ConnectionId);
+                GlobalDataManager._connections.Remove(empConn.ToString(), Context.ConnectionId);
 
-                String removedConnectionEmployeeid;
-                GlobalDataManager._userIdentity.TryRemove(Context.ConnectionId, out removedConnectionEmployeeid);
+                GlobalDataManager._userIdentity.TryRemove(Context.ConnectionId, out empConn);
             }
             
             return base.OnDisconnected(stopCalled);
         }
 
-        public void sendNotification(String appTo, String empTo, String message, Boolean showDesktopNotif, String extraDataAsJson)
+        public void sendNotification(long empTo, String message, Boolean showDesktopNotif, String extraDataAsJson)
         {
-            String empConn = string.Format("{0}{1}{2}", empTo, '_', appTo);
+            //Sender Connection
 
-            String pToEmployeeID = empConn;
-          
-            DateTime messageTime = DateTime.Now;
-            string messageTimeString = messageTime.ToString("MM/dd/yyyy hh:mm tt");
+            var srcConnData = new CustomConnectionData();
+            if (!GlobalDataManager._userIdentity.TryGetValue(Context.ConnectionId, out srcConnData))
+            {
+                return;
+            }
 
-            Int64 notificationId = SaveNotification(appTo,int.Parse(empTo), message, DateTime.UtcNow, extraDataAsJson);
+            var targetConnData = new CustomConnectionData() { UserID = empTo, AppID = srcConnData.AppID };
 
-            foreach (var connectionId in GlobalDataManager._connections.GetConnections(pToEmployeeID))
-                Clients.Client(connectionId).addMessage(notificationId, empTo, message, messageTimeString, showDesktopNotif, extraDataAsJson);
-            
+            DateTime messageTime = DateTime.UtcNow;
+            string messageTimeString = messageTime.ToTimeZoneTime(NotificationEngineDataService.tzi).ToString("MM/dd/yyyy hh:mm tt");
+            String uniqueNotificationID = "";
+            long newID = SaveNotification(srcConnData, targetConnData, message, messageTime, extraDataAsJson, out uniqueNotificationID);
+
+            if(newID > 0) { 
+                foreach (var connectionId in GlobalDataManager._connections.GetConnections(targetConnData.ToString()))
+                    Clients.Client(connectionId).addMessage(uniqueNotificationID, newID, message, messageTimeString, showDesktopNotif, extraDataAsJson);
+            }
+            else
+            {
+                return;
+            }
         }
 
-        public void markNotification(Int64 pNotificationID, string receiverAppID, int empID, Boolean isRead, Boolean markAll)
+        public void markNotification(String pNotificationID, Boolean isRead, Boolean markAll)
         {
-            NotificationEngineDataService.UpdateNotificationReadStatus(pNotificationID, receiverAppID, empID, isRead, markAll, DateTime.UtcNow);
+            var myConnData = new CustomConnectionData();
+            if (!GlobalDataManager._userIdentity.TryGetValue(Context.ConnectionId, out myConnData))
+            {
+                return;
+            }
+            NotificationEngineDataService.UpdateNotificationReadStatus(pNotificationID, myConnData.AppID, myConnData.UserID, isRead, markAll, DateTime.UtcNow);
         }
 
-
-
-        public Object getNotifcations(string appID, int empID, int max_notification_id)
+        public Object getNotifcations(long max_notification_id)
         {
-            var result = NotificationEngineDataService.GetNotifcations(appID,empID, max_notification_id);
+            var myConnData = new CustomConnectionData();
+            if (!GlobalDataManager._userIdentity.TryGetValue(Context.ConnectionId, out myConnData))
+            {
+                return null;
+            }
+
+            var result = NotificationEngineDataService.GetNotifcations(myConnData.AppID, myConnData.UserID, max_notification_id);
 
             long maxId = 0;
             int unReadCount = 0;
             if (result.Count > 0)
             {
-                maxId = result.Max(p => p.NotificationID);
+                maxId = result.Max(p => p.ID);
                 unReadCount = result.Count(p => p.IsRead == false);
             }
 
@@ -102,13 +170,17 @@ namespace PUCIT.AIMRL.NotificationServer
 
 
         #region HelperMethods
-        private Int64 SaveNotification(string ReceiverAppId, int to, string message, DateTime messageTime, String extraDataAsJson)
+        private long SaveNotification(CustomConnectionData src,CustomConnectionData target, string message, DateTime messageTime, String extraDataAsJson, out String uniqueNotificationID)
         {
+            uniqueNotificationID = Guid.NewGuid().ToString();
             RealTimeNotifications obj = new RealTimeNotifications();
-            obj.NotificationID = 0;
-            obj.receiverAppID = ReceiverAppId;
-            obj.SenderID = 0;
-            obj.ReceiverID = to;
+            obj.NotificationID = uniqueNotificationID;
+            obj.SenderAppID = src.AppID;
+            obj.SenderID = src.UserID;
+
+            obj.ReceiverAppID = target.AppID;
+            obj.ReceiverID = target.UserID;
+
             obj.NotificationDetail = message;
             obj.IsRead = false;
             obj.CreatedOn = messageTime;

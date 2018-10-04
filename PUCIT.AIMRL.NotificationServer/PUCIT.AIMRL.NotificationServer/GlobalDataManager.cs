@@ -12,7 +12,8 @@ namespace PUCIT.AIMRL.NotificationServer
     {
         // Connections
         public readonly static ConnectionMapping<string> _connections = new ConnectionMapping<string>();
-        public readonly static ConcurrentDictionary<string, string> _userIdentity = new ConcurrentDictionary<string, string>();
+        public readonly static ConcurrentDictionary<string, CustomConnectionData> _userIdentity = new ConcurrentDictionary<string, CustomConnectionData>();
         
+        public static List<NotificationApplications> NotificationApplicationsList { get; set; }
     }
 }
