@@ -36,6 +36,6 @@ extraData: If you want to send any data & want to use it on other side.
 
 -----------------
 
-You may check in _Headerlayout.cshtml, Following example is available
+You may check in first.html, Following example is available
 
 PUCIT.AIMRL.NotificationServerHandler.sendMessage(1, "hello world", false,{});
