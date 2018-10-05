@@ -12,10 +12,10 @@ namespace PUCIT.AIMRL.NotificationServer.Entities
         public String NotificationID { get; set; }  //Guid
 
         public String SenderAppID { get; set; }
-        public long SenderID { get; set; }
+        public String SenderID { get; set; }
 
         public string ReceiverAppID { get; set; }
-        public long ReceiverID { get; set; }
+        public String ReceiverID { get; set; }
 
         public string NotificationDetail { get; set; }
         public DateTime CreatedOn { get; set; }
@@ -97,7 +97,7 @@ namespace PUCIT.AIMRL.NotificationServer.Entities
 
     public class CustomConnectionData
     {
-        public long UserID { get; set; }
+        public String UserID { get; set; }
         public String AppID { get; set;}
 
         public override String ToString()

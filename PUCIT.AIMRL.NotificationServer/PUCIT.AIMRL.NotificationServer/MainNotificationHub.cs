@@ -13,13 +13,24 @@ namespace PUCIT.AIMRL.NotificationServer
 {
     public class MainNotificationHub : Hub
     {
+        private String CallerIPAddress
+        {
+            get
+            {
+                var obj = Context.Request.Environment["server.RemoteIpAddress"];
+                if (obj != null)
+                    return (String)obj;
+                else
+                    return "";
+            }
+        }
         public override Task OnConnected()
         {
             try
             {
-                var employeeid = Convert.ToInt64(Context.QueryString["employeeid"]);
-                var appid = Context.QueryString["appid"];
-                var requesterAppUrl = Context.Headers["Origin"];
+                String userid = Context.QueryString["uid"];
+                String appid = Context.QueryString["appid"];
+                String requesterAppUrl = Context.Headers["Origin"];
 
                 /*
                  Perform Employee ID, App ID validation, URL validation 
@@ -32,9 +43,7 @@ namespace PUCIT.AIMRL.NotificationServer
                     return null;
                 }
 
-                
-
-                var empConn = new CustomConnectionData() { UserID = employeeid, AppID = appid };
+                var empConn = new CustomConnectionData() { UserID = userid, AppID = appid };
 
                 GlobalDataManager._userIdentity.TryAdd(Context.ConnectionId, empConn);
 
@@ -43,6 +52,8 @@ namespace PUCIT.AIMRL.NotificationServer
 
                 if (!employeeConnections.Contains(Context.ConnectionId))
                     GlobalDataManager._connections.Add(empConn.ToString(), Context.ConnectionId);
+
+                NotificationEngineDataService.SaveConnectionDetail(Context.ConnectionId, userid.ToString(), appid, requesterAppUrl, this.CallerIPAddress, DateTime.UtcNow);
             }
             catch (Exception ex)
             {
@@ -52,39 +63,6 @@ namespace PUCIT.AIMRL.NotificationServer
 
             return base.OnConnected();
         }
-        public void AgentConnect(Int64 employeeid, String appid)
-        {
-            //try
-            //{
-
-            //    var requesterAppUrl = Context.Headers["Origin"];
-
-            //    /*
-            //     Perform Employee ID, App ID validation, URL validation 
-            //    */
-
-            //    var empConn = new CustomConnectionData() { UserID = employeeid,AppID=appid };
-
-            //    GlobalDataManager._userIdentity.TryAdd(Context.ConnectionId, empConn);
-
-            //    // add conection with reference to employee(key : 'employeeID_appID')
-            //    IEnumerable<string> employeeConnections = GlobalDataManager._connections.GetConnections(empConn.ToString());
-
-            //    if (!employeeConnections.Contains(Context.ConnectionId))
-            //        GlobalDataManager._connections.Add(empConn.ToString(), Context.ConnectionId);
-
-            //    /*
-            //     * Return connection ID to client so this connection ID should come in further requests
-            //     */
-            //    Clients.Caller.loginResult(true);
-            //}
-            //catch (Exception ex)
-            //{
-            //    PUCIT.AIMRL.Common.Logger.LogHandler.WriteLog("App", ex.ToString(), PUCIT.AIMRL.Common.Logger.LogType.ErrorMsg);
-            //    Clients.Caller.loginResult(false);
-            //}
-        }
-
         public override Task OnDisconnected(bool stopCalled)
         {
             var empConn = new CustomConnectionData();
@@ -94,11 +72,13 @@ namespace PUCIT.AIMRL.NotificationServer
 
                 GlobalDataManager._userIdentity.TryRemove(Context.ConnectionId, out empConn);
             }
-            
+
+            NotificationEngineDataService.UpdateConnectionDetail(Context.ConnectionId, DateTime.UtcNow);
+
             return base.OnDisconnected(stopCalled);
         }
 
-        public void sendNotification(long empTo, String message, Boolean showDesktopNotif, String extraDataAsJson)
+        public void sendNotification(String empTo, String message, Boolean showDesktopNotif, String extraDataAsJson)
         {
             //Sender Connection
 
@@ -170,7 +150,7 @@ namespace PUCIT.AIMRL.NotificationServer
 
 
         #region HelperMethods
-        private long SaveNotification(CustomConnectionData src,CustomConnectionData target, string message, DateTime messageTime, String extraDataAsJson, out String uniqueNotificationID)
+        private long SaveNotification(CustomConnectionData src,CustomConnectionData target, String message, DateTime messageTime, String extraDataAsJson, out String uniqueNotificationID)
         {
             uniqueNotificationID = Guid.NewGuid().ToString();
             RealTimeNotifications obj = new RealTimeNotifications();

@@ -212,7 +212,7 @@ PUCIT.AIMRL.NotificationServerHandler = (function () {
 
     function startConnection() {
 
-        $.connection.hub.qs = "employeeid=" + _options.EID + "&appid=" + _options.appID;
+        $.connection.hub.qs = "uid=" + _options.EID + "&appid=" + _options.appID;
         
         $.connection.hub.start()
             .done(function () {

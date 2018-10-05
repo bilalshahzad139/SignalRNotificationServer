@@ -32,9 +32,9 @@ namespace PUCIT.AIMRL.NotificationServer.DAL
                     var query = "execute [dbo].[usp_CreateAndUpdateNotifications] @pNotificationID, @senderAppID, @SenderID, @ReceiverAppID,  @ReceiverID, @NotificationDetail,@IsRead,@datetime,@extraDataAsJson";
 
                     var args = new DbParameter[] {
-                    new SqlParameter { ParameterName = "@pNotificationID", Value = obj.NotificationID}, 
-                                       
-                    
+                    new SqlParameter { ParameterName = "@pNotificationID", Value = obj.NotificationID},
+
+
                     new SqlParameter { ParameterName = "@senderAppID", Value = obj.SenderAppID},
                     new SqlParameter { ParameterName = "@SenderID", Value = obj.SenderID},
 
@@ -59,7 +59,7 @@ namespace PUCIT.AIMRL.NotificationServer.DAL
 
         }
 
-        public static List<RealTimeNotifications> GetNotifcations(string appID,long empID, long max_notification_id)
+        public static List<RealTimeNotifications> GetNotifcations(string appID, String empID, long max_notification_id)
         {
             try
             {
@@ -91,7 +91,7 @@ namespace PUCIT.AIMRL.NotificationServer.DAL
 
         }
 
-        public static String UpdateNotificationReadStatus(String pNotificationID,string receiverAppID, long empID, Boolean isRead, Boolean markAll, DateTime dateTime)
+        public static String UpdateNotificationReadStatus(String pNotificationID, String receiverAppID, String empID, Boolean isRead, Boolean markAll, DateTime dateTime)
         {
             try
             {
@@ -142,6 +142,57 @@ namespace PUCIT.AIMRL.NotificationServer.DAL
 
         }
 
+        public static long SaveConnectionDetail(String pConnID, String pUserID, String pAppID, String pAppUrl, String pIpAddress, DateTime pCurrentDateTime)
+        {
+            try
+            {
+                using (var ctx = new NotificationEngineDataContext())
+                {
+                    var query = "execute [dbo].[usp_AddConnectionDetail] @pConnID, @pUserID, @pAppID, @pAppUrl,  @pIpAddress, @pCurrentDateTime";
 
+                    var args = new DbParameter[] {
+                    new SqlParameter { ParameterName = "@pConnID", Value = pConnID},
+                    new SqlParameter { ParameterName = "@pUserID", Value = pUserID},
+                    new SqlParameter { ParameterName = "@pAppID", Value = pAppID},
+                        new SqlParameter { ParameterName = "@pAppUrl", Value = pAppUrl},
+                        new SqlParameter { ParameterName = "@pIpAddress", Value = pIpAddress},
+                    new SqlParameter { ParameterName = "@pCurrentDateTime", Value = pCurrentDateTime},
+                };
+
+                    return ctx.Database.SqlQuery<long>(query, args).FirstOrDefault();
+
+                }
+            }
+            catch (Exception ex)
+            {
+                LogHandler.WriteLog(MethodBase.GetCurrentMethod().Name, ex.Message, PUCIT.AIMRL.Common.Logger.LogType.ErrorMsg, ex);
+                return 0;
+            }
+
+        }
+
+        public static void UpdateConnectionDetail(String pConnID, DateTime pCurrentDateTime)
+        {
+            try
+            {
+                using (var ctx = new NotificationEngineDataContext())
+                {
+                    var query = "execute [dbo].[usp_UpdateConnectionDetail] @pConnID, @pCurrentDateTime";
+
+                    var args = new DbParameter[] {
+                    new SqlParameter { ParameterName = "@pConnID", Value = pConnID},
+                    new SqlParameter { ParameterName = "@pCurrentDateTime", Value = pCurrentDateTime},
+                };
+
+                ctx.Database.ExecuteSqlCommand(query, args);
+
+                }
+            }
+            catch (Exception ex)
+            {
+                LogHandler.WriteLog(MethodBase.GetCurrentMethod().Name, ex.Message, PUCIT.AIMRL.Common.Logger.LogType.ErrorMsg, ex);
+            }
+
+        }
     }
 }
