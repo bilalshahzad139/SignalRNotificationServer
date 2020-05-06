@@ -1,7 +1,7 @@
 # SignalRNotificationServer
 It is generic SignalR based Notification Server which can be easily integrated with your web application. 
 
-Tools: Visual Studio 2015, .NET Framework 4.6.1, SignalR 2.3.0
+Tools: Visual Studio 2015 or +, .NET Framework 4.6.1, SignalR 2.3.0
 
 What is in this repository?
 --------------
